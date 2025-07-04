@@ -6,8 +6,10 @@ services:
     container_name: teamcity-agent
     restart: unless-stopped
     environment:
-      - SERVER_URL=https://66.179.253.124:8111
-      - AGENT_NAME=docker-agent-chaosrex
+      - SERVER_URL=http://66.179.253.124:8111
+      - AGENT_NAME=public-agent-chaosrex
+    extra_hosts:
+      - "teamcity.chaosrex.com:66.179.253.124"
     volumes:
       - agent_conf:/data/teamcity_agent/conf
       - agent_logs:/opt/teamcity-agent/logs

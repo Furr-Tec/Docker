@@ -2,26 +2,22 @@ version: '3.8'
 
 services:
   teamcity-agent:
-    image: teamcity-agent-ubuntu:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: jetbrains/teamcity-agent:latest
     container_name: teamcity-agent
     restart: unless-stopped
-    volumes:
-      - agent_conf:/opt/teamcity-agent/conf
-      - agent_work:/opt/teamcity-agent/work
-      - agent_system:/opt/teamcity-agent/system
     environment:
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - SERVER_URL=https://teamcity.chaosrex.com
+      - AGENT_NAME=docker-agent-chaosrex
+    volumes:
+      - agent_conf:/data/teamcity_agent/conf
+      - agent_logs:/opt/teamcity-agent/logs
     networks:
-      - teamcity-network
+      - teamcity-net
 
 volumes:
   agent_conf:
-  agent_work:
-  agent_system:
+  agent_logs:
 
 networks:
-  teamcity-network:
+  teamcity-net:
     driver: bridge

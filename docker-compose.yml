@@ -2,6 +2,9 @@ version: '3.8'
 
 services:
   teamcity-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: jetbrains/teamcity-agent:latest
     container_name: teamcity-agent
     restart: unless-stopped

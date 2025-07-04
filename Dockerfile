@@ -2,10 +2,11 @@ FROM jetbrains/teamcity-agent:latest
 
 USER root
 
-# Install dependencies, GCC 14, CMake 4.1.0-rc1, and build tools
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && \
-    apt-get install -y software-properties-common curl ninja-build build-essential clang && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt-get install -y software-properties-common gnupg2 curl ninja-build build-essential clang lsb-release && \
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
     apt-get update && \
     apt-get install -y gcc-14 g++-14 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 && \
@@ -14,6 +15,6 @@ RUN apt-get update && \
     chmod +x cmake-4.1.0-rc1-linux-x86_64.sh && \
     ./cmake-4.1.0-rc1-linux-x86_64.sh --skip-license --prefix=/usr/local && \
     rm cmake-4.1.0-rc1-linux-x86_64.sh && \
-    apt-get clean
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 USER buildagent

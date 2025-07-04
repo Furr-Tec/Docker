@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  teamcity-agent:
+    image: teamcity-agent-ubuntu:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: teamcity-agent
+    restart: unless-stopped
+    volumes:
+      - agent_conf:/opt/teamcity-agent/conf
+      - agent_work:/opt/teamcity-agent/work
+      - agent_system:/opt/teamcity-agent/system
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+    networks:
+      - teamcity-network
+
+volumes:
+  agent_conf:
+  agent_work:
+  agent_system:
+
+networks:
+  teamcity-network:
+    driver: bridge

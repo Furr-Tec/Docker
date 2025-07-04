@@ -20,7 +20,7 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 RUN useradd -m teamcity && mkdir -p /opt/teamcity-agent
 WORKDIR /opt/teamcity-agent
 
-RUN curl -O http://<YOUR_TEAMCITY_SERVER>:8111/update/buildAgent.zip && \
+RUN curl -O http://66.179.253.124:8111/update/buildAgent.zip && \
     unzip buildAgent.zip && rm buildAgent.zip
 
 CMD ["./bin/agent.sh", "run"]

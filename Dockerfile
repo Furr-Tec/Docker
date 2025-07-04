@@ -44,11 +44,11 @@ RUN if [ -f /usr/bin/gcc-13 ]; then \
         update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100; \
     fi
 
-# Step 6: Install the corrected CMake version
-RUN curl -fLO https://github.com/Kitware/CMake/releases/download/v3.29.3/cmake-3.29.3-linux-x86_64.sh && \
-    chmod +x cmake-3.29.3-linux-x86_64.sh && \
-    ./cmake-3.29.3-linux-x86_64.sh --skip-license --prefix=/usr/local && \
-    rm cmake-3.29.3-linux-x86_64.sh
+# Step 6: Install the latest CMake RC version (4.0.3)
+RUN curl -fLO https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3-linux-x86_64.sh && \
+    chmod +x cmake-4.0.3-linux-x86_64.sh && \
+    ./cmake-4.0.3-linux-x86_64.sh --skip-license --prefix=/usr/local && \
+    rm cmake-4.0.3-linux-x86_64.sh
 
 # Step 7: Clean up to reduce final image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

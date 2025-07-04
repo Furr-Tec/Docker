@@ -2,6 +2,7 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+<<<<<<< HEAD
 # Args for build-time injection
 ARG TEAMCITY_SERVER
 ARG AGENT_NAME
@@ -17,6 +18,11 @@ RUN apt-get update && \
     apt-get install -y gcc-14 g++-14 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+=======
+RUN apt-get update && \
+    apt-get install -y cmake build-essential clang ninja-build && \
+    apt-get clean
+>>>>>>> parent of 7251146 (Update CMAKE)
 
 # Install CMake 4.1.0-rc1
 RUN curl -LO https://github.com/Kitware/CMake/releases/download/v4.1.0-rc1/cmake-4.1.0-rc1-linux-x86_64.sh && \

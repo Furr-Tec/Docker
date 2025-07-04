@@ -1,5 +1,5 @@
-# Start from Ubuntu for compatibility, then layer TeamCity agent
-FROM ubuntu:22.04
+# Stage 1 – Build Tools
+FROM ubuntu:22.04 AS buildenv
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -13,16 +13,15 @@ RUN apt-get update && \
     rm cmake-4.1.0-rc1-linux-x86_64.sh && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Stage 2 – TeamCity Agent with tools copied in
 FROM jetbrains/teamcity-agent:latest
 
 USER root
 
-# Copy tools from base
-COPY --from=base /usr/bin/gcc /usr/bin/
-COPY --from=base /usr/bin/g++ /usr/bin/
-COPY --from=base /usr/bin/cc /usr/bin/
-COPY --from=base /usr/local/bin/cmake /usr/local/bin/
-COPY --from=base /usr/local/share/cmake-4.1.0-rc1 /usr/local/share/
-COPY --from=base /usr/local/share/doc/cmake-4.1.0-rc1 /usr/local/share/doc/cmake-4.1.0-rc1
+COPY --from=buildenv /usr/bin/gcc-14 /usr/bin/gcc
+COPY --from=buildenv /usr/bin/g++-14 /usr/bin/g++
+COPY --from=buildenv /usr/local/bin/cmake /usr/local/bin/cmake
+COPY --from=buildenv /usr/local/share /usr/local/share
+COPY --from=buildenv /usr/local/doc /usr/local/doc
 
 USER buildagent

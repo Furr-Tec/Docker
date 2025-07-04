@@ -5,7 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: jetbrains/teamcity-agent:latest
+      args:
+        TEAMCITY_SERVER: http://66.179.253.124:8111
+        AGENT_NAME: public-agent-chaosrex
+    image: teamcity-agent-custom
     container_name: teamcity-agent
     restart: unless-stopped
     environment:

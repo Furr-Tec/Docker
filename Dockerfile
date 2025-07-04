@@ -2,7 +2,11 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set up dependencies and core tooling
+# Args for build-time injection
+ARG TEAMCITY_SERVER
+ARG AGENT_NAME
+
+# Install required packages and GCC 14
 RUN apt-get update && \
     apt-get install -y curl ca-certificates gnupg2 \
         build-essential clang ninja-build \
@@ -20,20 +24,16 @@ RUN curl -LO https://github.com/Kitware/CMake/releases/download/v4.1.0-rc1/cmake
     ./cmake-4.1.0-rc1-linux-x86_64.sh --skip-license --prefix=/usr/local && \
     rm cmake-4.1.0-rc1-linux-x86_64.sh
 
-# Add user for TeamCity Agent
+# Create user for buildagent
 RUN useradd -m buildagent && echo "buildagent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Set up TeamCity Agent
 USER buildagent
 WORKDIR /home/buildagent
 
-ENV TEAMCITY_SERVER=http://66.179.253.124:8111
-ENV AGENT_NAME=docker-agent-chaosrex
+# Download and set up the agent
+RUN mkdir -p TeamCity && \
+    curl --connect-timeout 15 --max-time 120 -O ${TEAMCITY_SERVER}/update/buildAgent.zip && \
+    unzip buildAgent.zip -d TeamCity && rm buildAgent.zip && \
+    chmod +x TeamCity/bin/agent.sh
 
-RUN mkdir TeamCity && cd TeamCity && \
-    curl -O $TEAMCITY_SERVER/update/buildAgent.zip && \
-    unzip buildAgent.zip && rm buildAgent.zip && \
-    chmod +x bin/agent.sh
-
-# Set entrypoint
 ENTRYPOINT ["TeamCity/bin/agent.sh"]

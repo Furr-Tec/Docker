@@ -46,6 +46,28 @@ RUN apt-get install -y --no-install-recommends \
     g++-mingw-w64-x86-64 \
     g++-mingw-w64-i686
 
+# Step 4b: Install current MinGW-w64 GCC 15 with strengthened C++26 support from drangon's build
+RUN cd /tmp && \
+    # Download current MinGW-w64 with GCC 15 (strengthened C++26 support)
+    wget https://downloads.sourceforge.net/project/mingw-w64-dgn/mingw-w64/mingw-w64-12-gcc-15-win64-cross-linux64-20250502.tar.bz2 && \
+    # Extract to /opt
+    tar -xf mingw-w64-12-gcc-15-win64-cross-linux64-20250502.tar.bz2 -C /opt/ && \
+    # Create symlinks for easy access
+    ln -sf /opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin/x86_64-w64-mingw32-gcc /usr/local/bin/x86_64-w64-mingw32-gcc-15 && \
+    ln -sf /opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin/x86_64-w64-mingw32-g++ /usr/local/bin/x86_64-w64-mingw32-g++-15 && \
+    ln -sf /opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin/x86_64-w64-mingw32-windres /usr/local/bin/x86_64-w64-mingw32-windres-15 && \
+    # Add to PATH
+    echo 'export PATH="/opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin:$PATH"' >> /etc/profile && \
+    # Clean up
+    rm /tmp/mingw-w64-12-gcc-15-win64-cross-linux64-20250502.tar.bz2 && \
+    # Verify the new compiler
+    /usr/local/bin/x86_64-w64-mingw32-gcc-15 --version && \
+    # Test C++26 support
+    echo 'int main() { return 0; }' > /tmp/test.cpp && \
+    /usr/local/bin/x86_64-w64-mingw32-g++-15 -std=c++26 /tmp/test.cpp -o /tmp/test.exe && \
+    echo "C++26 support confirmed with GCC 15" && \
+    rm /tmp/test.cpp /tmp/test.exe
+
 # Step 5: Configure update-alternatives to make the installed GCC/G++ the default (Linux target)
 RUN if [ -f /usr/bin/gcc-14 ]; then \
         update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 && \
@@ -56,10 +78,18 @@ RUN if [ -f /usr/bin/gcc-14 ]; then \
     fi
 
 # Step 5b: Set up MinGW cross-compiler alternatives (Windows target)
-RUN update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix 100 && \
+RUN if [ -f /usr/local/bin/x86_64-w64-mingw32-gcc-15 ]; then \
+        update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/local/bin/x86_64-w64-mingw32-gcc-15 200 && \
+        update-alternatives --install /usr/bin/x86_64-w64-mingw32-g++ x86_64-w64-mingw32-g++ /usr/local/bin/x86_64-w64-mingw32-g++-15 200 && \
+        update-alternatives --install /usr/bin/x86_64-w64-mingw32-windres x86_64-w64-mingw32-windres /usr/local/bin/x86_64-w64-mingw32-windres-15 200; \
+    fi && \
+    # Add system MinGW as fallback (lower priority)
+    update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix 100 && \
     update-alternatives --install /usr/bin/x86_64-w64-mingw32-g++ x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix 100 && \
     update-alternatives --install /usr/bin/i686-w64-mingw32-gcc i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix 100 && \
-    update-alternatives --install /usr/bin/i686-w64-mingw32-g++ i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix 100
+    update-alternatives --install /usr/bin/i686-w64-mingw32-g++ i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix 100 && \
+    # Show what we got
+    echo "MinGW GCC version:" && x86_64-w64-mingw32-gcc --version
 
 # Step 5c: Install GCC-15.1.0 from source for full C++26 support (this takes time but gives latest features)
 RUN apt-get install -y --no-install-recommends \

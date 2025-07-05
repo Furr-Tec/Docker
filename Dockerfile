@@ -46,27 +46,38 @@ RUN apt-get install -y --no-install-recommends \
     g++-mingw-w64-x86-64 \
     g++-mingw-w64-i686
 
-# Step 4b: Install current MinGW-w64 GCC 15 with strengthened C++26 support from drangon's build
-RUN cd /tmp && \
-    # Download current MinGW-w64 with GCC 15 (strengthened C++26 support)
-    wget https://downloads.sourceforge.net/project/mingw-w64-dgn/mingw-w64/mingw-w64-12-gcc-15-win64-cross-linux64-20250502.tar.bz2 && \
-    # Extract to /opt
-    tar -xf mingw-w64-12-gcc-15-win64-cross-linux64-20250502.tar.bz2 -C /opt/ && \
-    # Create symlinks for easy access
-    ln -sf /opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin/x86_64-w64-mingw32-gcc /usr/local/bin/x86_64-w64-mingw32-gcc-15 && \
-    ln -sf /opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin/x86_64-w64-mingw32-g++ /usr/local/bin/x86_64-w64-mingw32-g++-15 && \
-    ln -sf /opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin/x86_64-w64-mingw32-windres /usr/local/bin/x86_64-w64-mingw32-windres-15 && \
-    # Add to PATH
-    echo 'export PATH="/opt/mingw-w64-12-gcc-15-win64-cross-linux64/bin:$PATH"' >> /etc/profile && \
-    # Clean up
-    rm /tmp/mingw-w64-12-gcc-15-win64-cross-linux64-20250502.tar.bz2 && \
-    # Verify the new compiler
-    /usr/local/bin/x86_64-w64-mingw32-gcc-15 --version && \
-    # Test C++26 support
-    echo 'int main() { return 0; }' > /tmp/test.cpp && \
-    /usr/local/bin/x86_64-w64-mingw32-g++-15 -std=c++26 /tmp/test.cpp -o /tmp/test.exe && \
-    echo "C++26 support confirmed with GCC 15" && \
-    rm /tmp/test.cpp /tmp/test.exe
+# Step 4b: Install MinGW-w64 GCC 15 from furr-tec.ch server (reliable)
+RUN echo "Installing MinGW-w64 GCC 15 from furr-tec.ch..." && \
+    cd /tmp && \
+    # Download from reliable furr-tec.ch server
+    echo "Downloading MinGW-w64 GCC 15..." && \
+    wget --progress=bar:force --timeout=30 --tries=3 \
+         "https://furr-tec.ch/mingw-w64_gcc-15-win64.tar.bz2" \
+         -O mingw-gcc15.tar.bz2 && \
+    echo "Download successful, extracting..." && \
+    tar -xf mingw-gcc15.tar.bz2 -C /opt/ && \
+    # Find the actual extracted directory name
+    MINGW_DIR=$(find /opt -maxdepth 1 -name "*mingw*" -type d | head -1) && \
+    echo "Found MinGW directory: $MINGW_DIR" && \
+    ls -la "$MINGW_DIR/bin/" | head -5 && \
+    # Create symlinks with detected directory
+    if [ -f "$MINGW_DIR/bin/x86_64-w64-mingw32-gcc" ]; then \
+        ln -sf "$MINGW_DIR/bin/x86_64-w64-mingw32-gcc" /usr/local/bin/x86_64-w64-mingw32-gcc-15 && \
+        ln -sf "$MINGW_DIR/bin/x86_64-w64-mingw32-g++" /usr/local/bin/x86_64-w64-mingw32-g++-15 && \
+        ln -sf "$MINGW_DIR/bin/x86_64-w64-mingw32-windres" /usr/local/bin/x86_64-w64-mingw32-windres-15 && \
+        echo "MinGW GCC 15 installed successfully" && \
+        /usr/local/bin/x86_64-w64-mingw32-gcc-15 --version && \
+        # Test C++26 support
+        echo 'int main() { return 0; }' > /tmp/test.cpp && \
+        /usr/local/bin/x86_64-w64-mingw32-g++-15 -std=c++26 /tmp/test.cpp -o /tmp/test.exe && \
+        echo "C++26 support confirmed with GCC 15" && \
+        rm /tmp/test.cpp /tmp/test.exe; \
+    else \
+        echo "ERROR: MinGW binaries not found in $MINGW_DIR/bin/"; \
+        ls -la "$MINGW_DIR/" || true; \
+        exit 1; \
+    fi && \
+    rm /tmp/mingw-gcc15.tar.bz2
 
 # Step 5: Configure update-alternatives to make the installed GCC/G++ the default (Linux target)
 RUN if [ -f /usr/bin/gcc-14 ]; then \
